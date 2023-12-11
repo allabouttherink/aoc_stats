@@ -1,0 +1,10 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+  AdventOfCode - Stats
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    {{ moment.include_moment() }}
+{% endblock %}

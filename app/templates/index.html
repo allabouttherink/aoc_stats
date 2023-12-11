@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+  {{super()}}
+
+  {% if aoc.data %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+    <script>
+    $(document).ready(function() {
+      var ctx = document.getElementById('csum_chart').getContext('2d');
+      var data = {
+        datasets: [
+          {% for user in csum_chart %}
+            {
+              'fill': false,
+              'label': '{{ user['label'] }}',
+              'borderColor': '{{ user['backgroundColor'] }}',
+              'backgroundColor': '{{ user['backgroundColor'] }}',
+              'showLine': true,
+              'data': [
+                {% for datum in user['data'] %}
+                  {
+                    'x': moment("{{ datum['x'].isoformat() }}"),
+                    'y': {{ datum['y'] }}
+                  },
+                {% endfor %}
+              ],
+              'uinfo': [
+                {% for datum in user['uinfo'] %}
+                  {
+                    'day': {{ datum['day'] }},
+                    'idx': {{ datum['idx'] }}
+                  },
+                {% endfor %}
+              ]
+            },
+          {% endfor %}
+        ]
+      };
+
+      var chart = new Chart(ctx, {type:'scatter', data: data,
+        options: {
+          scales: {
+            x: {
+              type:'time',
+              distribution:'linear',
+              ticks: {
+                source:'auto',
+                major: { enabled: true},
+                maxRotation: 75,
+                minRotation: 75,
+                autoSkip: true,
+              },
+              scaleLabel: {
+                display: true,
+                labelString:'Stars'
+              },
+            },
+            y: {
+              scaleLabel: {
+                display:true,
+                labelString:'Cumulative Points'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  console.log(ctx);
+                  let day = ctx.dataset.uinfo[ctx.dataIndex].day;
+                  let sidx = ctx.dataset.uinfo[ctx.dataIndex].idx;
+                  let label = ctx.dataset.label;
+                  return label + ' ' + ctx.formattedValue + ': Star=' + day + ',' + sidx;
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+    </script>
+  {% endif %}
+
+
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+
+    <h2 class="text-center">AdventOfCode - Stats</h2>
+    <h5 class="text-center">Last Update: {{ moment(aoc.ts).format('MM/DD/YY hh:mm:ssA') }}</h5>
+
+    <div><canvas id="csum_chart"></canvas></div>
+
+
+    <div class="row">
+        <p class="text-center">More coming soon.</p>
+    </div>
+
+
+  </div>
+{% endblock %}
