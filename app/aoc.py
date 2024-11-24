@@ -21,6 +21,7 @@ class AOC(object):
         self.session = app.config['SESSION_KEY']
         self.cache_file = app.config['CACHE_FILE']
         self.read_cache = app.config['READ_FROM_CACHE']
+        self.url = app.config['AOC_URL']
 
         if self.read_cache:
             with open(self.cache_file) as fp:
@@ -34,7 +35,7 @@ class AOC(object):
             if self.read_cache:
                 self.data = self.cache_data
             else:
-                resp = requests.get(AOC_URL, cookies={'session':self.session})
+                resp = requests.get(self.url, cookies={'session':self.session})
                 resp.raise_for_status()
                 self.data = resp.json()
 
@@ -65,7 +66,7 @@ class AOC(object):
 
     @property
     def max_day(self):
-        return max(self.days)
+        return max(self.days) if self.days else 0
 
     @property
     def pts_scale(self):

@@ -17,6 +17,10 @@ def bad_request(error):
 def not_found_error(error):
     return render_template('404.html', title='404 - File Not Found'), 404
 
+@app.errorhandler(500)
+def not_found_error(error):
+    return render_template('500.html', title='500 - Internal Server Error'), 500
+
 @app.template_filter('max')
 def template_max(it):
     return max(it)
