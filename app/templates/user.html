@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+  {{super()}}
+  <script src="{{url_for('.static', filename='js/sortable.min.js')}}"></script>
+{% endblock %}
+
+{% block styles %}
+  {{super()}}
+  <link rel="stylesheet" href="{{url_for('.static',
+        filename='css/sortable-theme-minimal.css')}}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+
+    <h2 class="text-center">{{user}}</h2>
+    <h5 class="text-center">Last Update: {{ moment(aoc.ts).format('MM/DD/YY hh:mm:ssA') }}</h5>
+
+    <h4 class="text-center">Personal Times</h4>
+
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped sortable-theme-boostrap" data-sortable>
+            <thead>
+              <tr>
+                <th class="text-center">Day</th>
+                <th class="text-center">Part 1</th>
+                <th class="text-center">Part 2</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for day in range(aoc.days | max, 0, -1) %}
+              <tr>
+                  <td>{{ day }} </td>
+                  <td>{{ stars[(day,1)] | star_elapsed if (day,1) in stars else '-' }}</td>
+                  <td>{{ stars[(day,2)] | star_elapsed if (day,2) in stars else '-' }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

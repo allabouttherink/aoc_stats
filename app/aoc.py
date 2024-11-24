@@ -13,6 +13,9 @@ AOC_URL = 'https://adventofcode.com/2023/leaderboard/private/view/2258949.json'
 
 class AOC(object):
 
+    #START = 1701388800
+    START = 1701406800
+
     def __init__(self, app):
         self.app = app
         self.session = app.config['SESSION_KEY']
@@ -38,21 +41,22 @@ class AOC(object):
                 with open(self.cache_file, 'w') as fp:
                     json.dump(self.data,fp,indent=2)
 
-        except:
+        except Exception as a:
             logger.error('AOC request failed')
+            logger.error(e)
             self.data = {}
 
         self.ts = datetime.datetime.utcnow()
 
         # parse data
-        self.users = set()
+        self.users = {}
         self.stars = []
         for uid, udata in self.data["members"].items():
-            user = udata["name"]
-            self.users.add(user)
+            user = udata['name'] if udata['name'] is not None else 'anonymous%d' % int(uid)
+            self.users[int(uid)] = user
             for day, ddata in udata["completion_day_level"].items():
                 for star, sdata in ddata.items():
-                    s = Star(user, int(day), int(star), sdata["get_star_ts"])
+                    s = Star(int(uid), user, int(day), int(star), sdata["get_star_ts"])
                     self.stars.append(s)
 
     @property
@@ -60,15 +64,19 @@ class AOC(object):
         return set([x.day for x in self.stars])
 
     @property
+    def max_day(self):
+        return max(self.days)
+
+    @property
     def pts_scale(self):
         return [x for x in range(len(self.users), 0, -1)]
 
-    def get_stars(self, users=None, days=None, idxs=None):
+    def get_stars(self, uids=None, days=None, idxs=None):
         '''Filter star list.'''
         stars = self.stars
 
-        if users:
-            stars = filter(lambda x: x.user in users, stars)
+        if uids:
+            stars = filter(lambda x: x.uid in uids, stars)
         if days:
             stars = filter(lambda x: x.day in days, stars)
         if idxs:
@@ -95,16 +103,16 @@ class AOC(object):
             pts_map.update(self.get_day_points(day))
         return pts_map
 
-
 class Star(object):
-    def __init__(self, user, day, idx, time):
-        self.user = user if not None else 'Anonymous'
+    def __init__(self, uid, user, day, idx, time):
+        self.uid = uid
+        self.user = user
         self.day = day
         self.idx = idx
-        self.time = datetime.datetime.fromtimestamp(time)
+        self.time = datetime.datetime.utcfromtimestamp(time)
 
     def __key(self):
-        return (self.user, self.day, self.idx)
+        return (self.uid, self.day, self.idx)
 
     def __hash__(self):
         return hash(self.__key())

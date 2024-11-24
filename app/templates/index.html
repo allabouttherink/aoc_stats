@@ -5,6 +5,7 @@
 
   {% if aoc.data %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
     <script>
     $(document).ready(function() {
@@ -21,7 +22,7 @@
               'data': [
                 {% for datum in user['data'] %}
                   {
-                    'x': moment("{{ datum['x'].isoformat() }}"),
+                    'x': moment.utc("{{ datum['x'].isoformat() }}"),
                     'y': {{ datum['y'] }}
                   },
                 {% endfor %}
@@ -81,9 +82,14 @@
       });
     });
     </script>
+    <script src="{{url_for('.static', filename='js/sortable.min.js')}}"></script>
   {% endif %}
+{% endblock %}
 
-
+{% block styles %}
+  {{super()}}
+  <link rel="stylesheet" href="{{url_for('.static',
+        filename='css/sortable-theme-minimal.css')}}"/>
 {% endblock %}
 
 {% block content %}
@@ -92,13 +98,51 @@
     <h2 class="text-center">AdventOfCode - Stats</h2>
     <h5 class="text-center">Last Update: {{ moment(aoc.ts).format('MM/DD/YY hh:mm:ssA') }}</h5>
 
+    <h3 class="text-center">Leaderboard</h3>
     <div><canvas id="csum_chart"></canvas></div>
 
-
     <div class="row">
-        <p class="text-center">More coming soon.</p>
+      <div class="col-sm-6 col-sm-offset-3">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped sortable-theme-boostrap" data-sortable>
+            <thead>
+              <tr>
+                <th class="text-center">Rank</th>
+                <th class="text-center">User</th>
+                <th class="text-center">Points</th>
+                <th class="text-center">MaxPts</th>
+                <th class="text-center">Star Count</th>
+                <th class="text-center">Stars</th>
+              </tr>
+            </thead>
+            <tbody>`
+            {% for user in users %}
+              <tr>
+                  <td>{{ loop.index }}</td>
+                  <td><a href="{{ url_for('user_page', uid=user.uid) }}">
+                        {{ user['user'] }}
+                      </a>
+                  </td>
+                  <td><b>{{ user['pts'] }}</b></td>
+                  <td>{{ user['max_pts'] }}</td>
+                  <td>{{ user['num_stars'] }}</td>
+                  <td>
+                    {% for x in range(1,aoc.max_day+1) %}
+                        {% if user['stars'][x] == 2 %}
+                            <span style="color:gold">&starf;</span>
+                        {% elif user['stars'][x] == 1 %}
+                            <span style="color:silver">&starf;</span>
+                        {% else %}
+                            &star;
+                        {% endif %}
+                    {% endfor %}
+                  </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-
-
   </div>
 {% endblock %}

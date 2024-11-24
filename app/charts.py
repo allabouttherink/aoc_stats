@@ -19,8 +19,8 @@ def get_csum_chart(aoc):
     chart = []
 
     # build data
-    for n,user in enumerate(aoc.users):
-        ustars = filter(lambda x: x.user == user, stars)
+    for n,uid in enumerate(aoc.users):
+        ustars = filter(lambda x: x.uid== uid, stars)
         udata = []
         uinfo = []
         pts = 0
@@ -32,7 +32,7 @@ def get_csum_chart(aoc):
             uinfo.append({'day': star.day, 'idx': star.idx})
 
         chart.append({
-            'label': user,
+            'label': aoc.users[uid],
             'backgroundColor': COLORS[n % len(COLORS)],
             'data': udata,
             'uinfo': uinfo
@@ -40,29 +40,3 @@ def get_csum_chart(aoc):
 
     return chart
 
-#def get_csum_chart(aoc):
-#
-#    stars = aoc.get_all_points()
-#    user_pts = {}
-#    data = {}
-#
-#    # build data
-#    for user in aoc.users:
-#        ustars = filter(lambda x: x.user == user, stars)
-#        data[user] = []
-#        pts = 0
-#
-#        for star in sorted(ustars):
-#            pts += stars[star]
-#            data[user].append({'x': star.time, 'y': pts})
-#
-#    # gen chart
-#    chart = []
-#    for n, user in enumerate(data):
-#        chart.append({
-#            'label': user,
-#            'backgroundColor': COLORS[n % len(COLORS)],
-#            'data': data[user]
-#        })
-#
-#    return chart
