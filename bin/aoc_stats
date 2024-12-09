@@ -1,0 +1,16 @@
+#! /usr/bin/env bash
+dir=$(dirname ${0})
+dir=$(cd ${dir}; pwd)
+
+# activate virtual environment
+. ${dir}/../.venv/bin/activate
+
+# setup args
+GARGS="--chdir ${dir}/.."                               # set working directory
+GARGS="${GARGS} --log-file=${dir}/../gunicorn.log"      # logfile
+GARGS="${GARGS} -b unix:/run/aoc/aocstats.sock"         # unix socket comms
+GARGS="${GARGS} -w 1"                                   # single worker
+GARGS="${GARGS} --timeout 120"                          # worker timeout
+
+# start in background
+gunicorn aoc_stats:app ${GARGS}

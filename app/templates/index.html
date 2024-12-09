@@ -7,6 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.4.4/build/index.umd.min.js"></script>
+
     <script>
     $(document).ready(function() {
       var ctx = document.getElementById('csum_chart').getContext('2d');
@@ -80,6 +82,72 @@
           }
         }
       });
+
+    const boxplotData1 = {
+      // define label tree
+      labels: {{ wchart['days'] | tojson }},
+      datasets: [{
+        label: 'Star 1',
+        backgroundColor: 'rgba(255,0,0,0.5)',
+        borderColor: 'red',
+        borderWidth: 1,
+        outlierColor: '#999999',
+        padding: 10,
+        itemRadius: 2,
+        data: {{ wchart['star1'] | tojson }},
+      }]
+    };
+    const boxplotData2 = {
+      // define label tree
+      labels: {{ wchart['days'] | tojson }},
+      datasets: [{
+        label: 'Star 2',
+        backgroundColor:  'rgba(0,0,255,0.5)',
+        borderColor: 'blue',
+        borderWidth: 1,
+        outlierColor: '#999999',
+        padding: 10,
+        itemRadius: 2,
+        data: {{ wchart['star2'] | tojson }},
+      }]
+    };
+
+      const bctx1 = document.getElementById("bchart1").getContext("2d");
+      var myBar = new Chart(bctx1, {
+        type: 'boxplot',
+        data: boxplotData1,
+        options: {
+          responsive: true,
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Chart.js Box Plot Chart'
+          },
+          minStats: 'whiskerMin',
+          maxStats: 'whiskerMax',
+        }
+      });
+
+      const bctx2 = document.getElementById("bchart2").getContext("2d");
+      var myBar = new Chart(bctx2, {
+        type: 'boxplot',
+        data: boxplotData2,
+        options: {
+          responsive: true,
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Chart.js Box Plot Chart'
+          },
+          minStats: 'whiskerMin',
+          maxStats: 'whiskerMax',
+        }
+      });
+
     });
     </script>
     <script src="{{url_for('.static', filename='js/sortable.min.js')}}"></script>
@@ -144,5 +212,10 @@
         </div>
       </div>
     </div>
+
+    <h3 class="text-center">Star Solve Time</h3>
+    <div><canvas id="bchart1"></canvas></div>
+    <div><canvas id="bchart2"></canvas></div>
+
   </div>
 {% endblock %}

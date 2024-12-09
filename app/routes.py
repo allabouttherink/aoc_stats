@@ -1,13 +1,12 @@
-from flask import render_template, abort
-from app import app, scheduler, charts
-from app import aoc as AOC
+'''Content generation for HTTP endpoints.'''
 import logging
 import datetime
-logger = logging.getLogger('aoc_stats')
 
-@scheduler.task('interval', id='data_update', seconds=15)
-def data_update():
-    app.aoc.update()
+from flask import render_template, abort
+
+from app import app, charts
+
+LOG = logging.getLogger('aoc_stats')
 
 @app.errorhandler(400)
 def bad_request(error):
@@ -21,25 +20,10 @@ def not_found_error(error):
 def not_found_error(error):
     return render_template('500.html', title='500 - Internal Server Error'), 500
 
-@app.template_filter('max')
-def template_max(it):
-    return max(it)
-
-@app.template_filter('star_elapsed')
-def template_star_elapsed(star):
-
-    day_start = app.aoc.START + (star.day-1)*(3600*24)
-    day_start = datetime.datetime.utcfromtimestamp(day_start)
-
-    return star.time - day_start
-    #else:
-    #    star1 = [x for x in app.aoc.get_stars(uids=[star.uid], days=[star.day], idxs=[1])][0]
-    #    return star.time - star1.time
-
 @app.route('/')
 @app.route('/index')
 def index():
-
+    '''Landing page.'''
     aoc = app.aoc
     stars = aoc.get_all_points()
 
@@ -69,15 +53,16 @@ def index():
             })
         users = sorted(users, key=lambda x: x['pts'], reverse=True)
 
-    # cum chart
+    # charts
     csum_chart = charts.get_csum_chart(aoc)
+    whisker_chart = charts.get_whisker_chart(aoc)
 
     return render_template('index.html', aoc=app.aoc, csum_chart=csum_chart,
-            users=users)
+            users=users, wchart=whisker_chart)
 
 @app.route('/user/<uid>')
 def user_page(uid):
-
+    '''Per-user statistics page.'''
     aoc = app.aoc
 
     try:
@@ -91,3 +76,14 @@ def user_page(uid):
     stars = {(x.day,x.idx):x for x in aoc.get_stars(uids=[uid])}
 
     return render_template('user.html', aoc=aoc, stars=stars, user=user)
+
+#
+# template helpers
+#
+@app.template_filter('max')
+def template_max(it):
+    return max(it)
+
+@app.template_filter('star_elapsed')
+def template_star_elapsed(star):
+    return app.aoc.star_elapsed(star)

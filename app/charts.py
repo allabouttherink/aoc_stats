@@ -1,3 +1,4 @@
+'''Utility functions to generate chart data.'''
 
 COLORS = [
     'rgb(255, 0, 41)',
@@ -40,3 +41,19 @@ def get_csum_chart(aoc):
 
     return chart
 
+def get_whisker_chart(aoc):
+
+    days = sorted(aoc.days)
+    chart = {
+        'days': days,
+        'star1': [],
+        'star2': []
+    }
+
+    for d in days:
+        for idx in [1,2]:
+            stars = aoc.get_stars(days=[d], idxs=[idx])
+            deltas = [aoc.star_elapsed(s) for s in stars]
+            chart['star%d' % idx].append([s.total_seconds()/60.0 for s in deltas])
+
+    return chart

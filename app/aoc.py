@@ -1,79 +1,113 @@
+'''Fetch and organize data from AOC endpoint'''
+import os
+import logging
 import datetime
 import requests
 import json
-from collections import defaultdict
 
-import logging
-logger = logging.getLogger('aoc_stats')
-gunicorn_error_logger = logging.getLogger('gunicorn.error')
-logger.handlers.extend(gunicorn_error_logger.handlers)
-logger.setLevel(logging.DEBUG)
-
-AOC_URL = 'https://adventofcode.com/2023/leaderboard/private/view/2258949.json'
+LOG = logging.getLogger('aoc_stats')
 
 class AOC(object):
+    '''Main class for AOC data'''
 
-    #START = 1701388800
-    START = 1701406800
+    # AOC event start time (unix timestamp, EST)
+    START = 1733029200
 
     def __init__(self, app):
         self.app = app
-        self.session = app.config['SESSION_KEY']
-        self.cache_file = app.config['CACHE_FILE']
-        self.read_cache = app.config['READ_FROM_CACHE']
+
+        # connection setup
         self.url = app.config['AOC_URL']
+        self.session = app.config['SESSION_KEY']
+        self.user_agent = app.config['USER_AGENT']
+        if not self.url or not self.session or not self.user_agent:
+            LOG.error('invalid config: url=%s, session=%s, user_agent=%s'
+                            % (self.url, self.session, self.user_agent))
+            raise RuntimeError('bad config')
 
-        if self.read_cache:
+        # cache file setup
+        self.cache_file = app.config['CACHE_FILE']
+        self.do_update = app.config['DATA_UPDATE']
+        if not self.do_update:
+            if not os.path.exists(self.cache_file):
+                LOG.error('cache file missing: %s' % self.cache_file)
+                raise RuntimeError('missing cache file')
+
+            # read cache and parse
             with open(self.cache_file) as fp:
-                self.cache_data = json.load(fp)
+                self.data = json.load(fp)
+            self.parse_data()
 
-        # initial update
-        self.update()
+            # set timestamp for cached data
+            self.ts = datetime.datetime.utcnow()
+
+        # do initial update
+        if self.do_update:
+            self.update()
 
     def update(self):
+        '''Fetch data from API and parse.'''
+        self.fetch_data()
+        self.parse_data()
+
+        # set timestamp for freshness of data
+        self.ts = datetime.datetime.utcnow()
+        LOG.info('update complete - %s' % self.ts)
+
+    def fetch_data(self):
+        '''Pull data from AOC API and write it to cache file.'''
         try:
-            if self.read_cache:
-                self.data = self.cache_data
-            else:
-                resp = requests.get(self.url, cookies={'session':self.session})
-                resp.raise_for_status()
-                self.data = resp.json()
+            resp = requests.get(self.url,
+                    headers={'User-Agent': self.user_agent},
+                    cookies={'session':self.session})
+            resp.raise_for_status()
+            self.data = resp.json()
 
-                with open(self.cache_file, 'w') as fp:
-                    json.dump(self.data,fp,indent=2)
+            # write to cache file
+            with open(self.cache_file, 'w') as fp:
+                json.dump(self.data,fp,indent=2)
 
-        except Exception as a:
-            logger.error('AOC request failed')
-            logger.error(e)
+        except Exception as e:
+            LOG.error('update() - AOC request failed')
+            LOG.error(e)
             self.data = {}
 
-        self.ts = datetime.datetime.utcnow()
-
-        # parse data
+    def parse_data(self):
+        '''Parse users and stars from data'''
         self.users = {}
         self.stars = []
+
+        if not self.data:
+            LOG.error('no data to parse!')
+            raise RuntimeError('no data to parse')
+
         for uid, udata in self.data["members"].items():
-            user = udata['name'] if udata['name'] is not None else 'anonymous%d' % int(uid)
-            self.users[int(uid)] = user
+            uid, user = int(uid), udata['name']
+            self.users[uid] = user if user is not None else 'anon%d' % uid
+
             for day, ddata in udata["completion_day_level"].items():
                 for star, sdata in ddata.items():
-                    s = Star(int(uid), user, int(day), int(star), sdata["get_star_ts"])
+                    star_ts = sdata["get_star_ts"]
+                    s = Star(int(uid), user, int(day), int(star), star_ts)
                     self.stars.append(s)
 
     @property
     def days(self):
+        '''Calculates set of days from all solved stars.'''
         return set([x.day for x in self.stars])
 
     @property
     def max_day(self):
+        '''Calculates latest day from all solved stars.'''
         return max(self.days) if self.days else 0
 
     @property
     def pts_scale(self):
+        '''Returns points scale for leaderboard based on number of users.'''
         return [x for x in range(len(self.users), 0, -1)]
 
     def get_stars(self, uids=None, days=None, idxs=None):
-        '''Filter star list.'''
+        '''Filter star list by user_ids, days, and/or indices.'''
         stars = self.stars
 
         if uids:
@@ -104,7 +138,30 @@ class AOC(object):
             pts_map.update(self.get_day_points(day))
         return pts_map
 
+    def star_elapsed(self, star):
+        '''
+        Calculate solve time for a given star.
+
+        First stars are calculated relative to the start of the given day.
+        Second starts are calculated relative to the first star solve time.
+        '''
+        # calc from day start
+        if star.idx == 1:
+            day_start = self.START + (star.day-1)*(3600*24)
+            day_start = datetime.datetime.utcfromtimestamp(day_start)
+            rv = star.time - day_start
+
+        # calc star2 - star1
+        else:
+            star1 = [x for x in self.get_stars(uids=[star.uid],
+                                                days=[star.day], idxs=[1])][0]
+            rv = star.time - star1.time
+
+        return rv
+
 class Star(object):
+    '''Utility class for star management'''
+
     def __init__(self, uid, user, day, idx, time):
         self.uid = uid
         self.user = user
