@@ -2,13 +2,13 @@
 import os
 
 # JSON endpoint for AOC private leaderboard
-AOC_URL="https://adventofcode.com/2024/leaderboard/private/view/4238010.json"
+AOC_URL=""
 
 # AOC session key - pull from cookie
-AOC_SESSION="53616c7465645f5f7dba66c5c091e4c63e24086aee523a1dbdd74fef4aa90cbc931a36f25876c3e33362e425ab9c1f0aa09a547174c00ab0737b37f47bd0df13"
+AOC_SESSION=""
 
 # user agent string sent in all requests
-AOC_USER_AGENT="john.carto@gmail.com"
+AOC_USER_AGENT=""
 
 class Config(object):
     '''Read config from environment or use defaults'''
