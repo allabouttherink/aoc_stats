@@ -8,7 +8,7 @@ AOC_URL=""
 AOC_SESSION=""
 
 # user agent string sent in all requests
-AOC_USER_AGENT=""
+AOC_USER_AGENT="github.com/allabouttherink/aoc_stats by allabouttherink@protonmail.com"
 
 class Config(object):
     '''Read config from environment or use defaults'''
