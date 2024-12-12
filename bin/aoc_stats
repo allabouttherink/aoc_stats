@@ -8,9 +8,14 @@ dir=$(cd ${dir}; pwd)
 # setup args
 GARGS="--chdir ${dir}/.."                               # set working directory
 GARGS="${GARGS} --log-file=${dir}/../gunicorn.log"      # logfile
-GARGS="${GARGS} -b unix:/run/aoc/aocstats.sock"         # unix socket comms
 GARGS="${GARGS} -w 1"                                   # single worker
 GARGS="${GARGS} --timeout 120"                          # worker timeout
 
-# start in background
+# use unix socket when running as service behind nginx
+# (uses 127.0.0.1:8000 otherwise)
+if [ "${1}" == "--service" ]; then
+    GARGS="${GARGS} -b unix:/run/aoc/aocstats.sock"     # unix socket comms
+fi
+
+# start!
 gunicorn aoc_stats:app ${GARGS}
