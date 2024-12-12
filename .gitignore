@@ -1,5 +1,6 @@
 *.log
 *.swp
+data/*
 .venv/*
 __pycache__/*
 app/__pycache__/*
