@@ -14,7 +14,7 @@ COLORS = [
 ]
 
 def get_csum_chart(aoc):
-
+    '''Generate data structure for cumulative score (leaderboard) chart.'''
     stars = aoc.get_all_points()
     user_pts = {}
     chart = []
@@ -42,7 +42,7 @@ def get_csum_chart(aoc):
     return chart
 
 def get_whisker_chart(aoc):
-
+    '''Generate data structure for box-and-whisker plot of solve times.'''
     days = sorted(aoc.days)
     chart = {
         'days': days,
@@ -54,6 +54,7 @@ def get_whisker_chart(aoc):
         for idx in [1,2]:
             stars = aoc.get_stars(days=[d], idxs=[idx])
             deltas = [aoc.star_elapsed(s) for s in stars]
-            chart['star%d' % idx].append([s.total_seconds()/60.0 for s in deltas])
+            chart['star%d' % idx].append(
+                    [s.total_seconds()/60.0 for s in deltas])
 
     return chart

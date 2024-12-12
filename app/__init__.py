@@ -27,6 +27,7 @@ from . import aoc
 app.aoc = aoc.AOC(app)
 from . import routes
 
+# update data every 15 minutes
 @scheduler.task('interval', id='data_update', seconds=900)
 def data_update():
     if app.aoc.do_update:

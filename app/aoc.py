@@ -117,7 +117,7 @@ class AOC(object):
         if idxs:
             stars = filter(lambda x: x.idx in idxs, stars)
 
-        return stars
+        return list(stars)
 
     def get_star_points(self, day, idx):
         '''Calculate points for a particular star.'''
