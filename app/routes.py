@@ -57,8 +57,11 @@ def index():
     csum_chart = charts.get_csum_chart(aoc)
     whisker_chart = charts.get_whisker_chart(aoc)
 
+    # latest stars (last 10)
+    latest_stars = sorted(aoc.get_stars(), reverse=True)[:10]
+
     return render_template('index.html', aoc=app.aoc, csum_chart=csum_chart,
-            users=users, wchart=whisker_chart)
+            users=users, wchart=whisker_chart, latest_stars=latest_stars)
 
 @app.route('/user/<uid>')
 def user_page(uid):

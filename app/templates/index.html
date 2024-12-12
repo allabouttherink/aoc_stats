@@ -166,6 +166,36 @@
     <h2 class="text-center">AdventOfCode - Stats</h2>
     <h5 class="text-center">Last Update: {{ moment(aoc.ts).format('MM/DD/YY hh:mm:ssA') }}</h5>
 
+    <h3 class="text-center">Latest Stars</h3>
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped">
+            <thead>
+              <tr>
+                <th class="text-center">User</th>
+                <th class="text-center">Date</th>
+                <th class="text-center">Day</th>
+                <th class="text-center">Star</th>
+                <th class="text-center">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for ls in latest_stars %}
+              <tr>
+                  <td>{{ ls.user if ls.user else "anon%s" % ls.uid }}</td>
+                  <td>{{ moment(ls.time).format('MM/DD/YY hh:mm:ssA') }}</td>
+                  <td>{{ "Day %02s" % (ls.day) }}</td>
+                  <td>{{ "Star %s" % (ls.idx) }}</td>
+                  <td>{{ ls | star_elapsed }} </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <h3 class="text-center">Leaderboard</h3>
     <div><canvas id="csum_chart"></canvas></div>
 
